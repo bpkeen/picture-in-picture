@@ -30,10 +30,6 @@ spec: Fullscreen; urlPrefix: https://fullscreen.spec.whatwg.org
     type: dfn; text: fullscreen flag; url: #fullscreen-flag
     type: dfn; text: fullscreenElement; url: dom-document-fullscreenelement
     type: dfn; text: exit fullscreen; url: fully-exit-fullscreen
-spec: Remote-Playback; urlPrefix: https://w3c.github.io/remote-playback/#dfn-
-    type: dfn
-        text: local playback device
-        text: local playback state
 spec: MediaSession; urlPrefix: https://w3c.github.io/mediasession/
     type: enum; text: MediaSessionEnterPictureInPictureReason; url: #enumdef-mediasessionenterpictureinpicturereason
     type: enum-value; for: MediaSessionEnterPictureInPictureReason; text: "contentoccluded"; url: #dom-mediasessionenterpictureinpicturereason-contentoccluded
@@ -206,13 +202,14 @@ the user agent MUST run the following steps:
     {{SecurityError}} and abort these steps.
 1. If |video|'s {{readyState}} attribute is {{HAVE_NOTHING}}, throw a
     {{InvalidStateError}} and abort these steps.
-1. If |video| has no video track, throw a {{InvalidStateError}} and abort these
-    steps.
-1. If |video|'s {{HTMLVideoElement/disablePictureInPicture}} is true, the user
-    agent MAY throw an {{InvalidStateError}} and abort these steps.
-1. If {{pictureInPictureElement}} is `null` and the <a>relevant global object</a>
-    of <a>this</a> does not have <a>transient activation</a>, throw a
-    {{NotAllowedError}} and abort these steps.
+1. If |video| has no video track, throw a {{InvalidStateError}} and abort
+    these steps.
+1. If |video|'s {{HTMLVideoElement/disablePictureInPicture}} is true,
+    the user agent MAY throw an {{InvalidStateError}} and abort these steps.
+1. If {{pictureInPictureElement}} is `null`:
+    1. If <a>this</a>'s <a>relevant global object</a> does not have 
+        <a>transient activation</a>, throw a {{NotAllowedError}} and abort these steps.
+    1. [=Consume user activation=] given <a>this</a>'s <a>relevant global object</a>.
 1. If |video| is {{pictureInPictureElement}}, abort these steps.
 1. Set {{pictureInPictureElement}} to |video|.
 1. Let <dfn>Picture-in-Picture window</dfn> be a new instance of
@@ -244,6 +241,13 @@ video size.
 It is also RECOMMENDED that the Picture-in-Picture window has a maximum and
 minimum size. For example, it could be restricted to be between a quarter and
 a half of one dimension of the screen.
+
+When a {{DocumentOrShadowRoot}}'s {{pictureInPictureElement}} attribute is set,
+the [=Picture-in-Picture window=] MUST be visible, even when the
+{{DocumentOrShadowRoot}}'s [=relevant global object=]'s [=associated Document=]'s
+[=Document/visibility state=] is "hidden".
+The user agent SHOULD provide a way for users to manually close the
+Picture-in-Picture window.
 
 ## Exit Picture-in-Picture ## {#exit-pip}
 
@@ -300,17 +304,7 @@ the user agent MAY run these steps:
 It is RECOMMENDED to run the <a>exit Picture-in-Picture algorithm</a> when the
 {{pictureInPictureElement}} <a>fullscreen flag</a> is set.
 
-## Interaction with Remote Playback ## {#remote-playback}
-
-The [[Remote-Playback]] specification defines a <a>local playback device</a>
-and a <a>local playback state</a>. For the purpose of Picture-in-Picture, the
-playback is local and regardless of whether it is played in page or in
-Picture-in-Picture.
-
 ## Interaction with Media Session ## {#media-session}
-
-The API will have to be used with the [[MediaSession]] API for customizing the
-available controls on the Picture-in-Picture window.
 
 The user agent SHOULD NOT override the media session action
 {{MediaSessionAction/"enterpictureinpicture"}} action handler, if one is
@@ -319,13 +313,8 @@ user experience, when a Picture-in-Picture window is requested.
 
 ## Interaction with Page Visibility ## {#page-visibility}
 
-When {{pictureInPictureElement}} is set, the Picture-in-Picture window MUST
-be visible, even when the <a>Document</a> is not in focus or hidden. The user
-agent SHOULD provide a way for users to manually close the Picture-in-Picture
-window.
-
 The Picture-in-Picture window visibility MUST NOT be taken into account by the
-user agent to determine if the <a>system visibility state</a> of a 
+user agent to determine if the <a>system visibility state</a> of a
 <a for="/">traversable navigable</a> has changed.
 
 ## One Picture-in-Picture window ## {#one-pip-window}
@@ -442,9 +431,8 @@ The {{height}} attribute MUST return the height in <a lt=px value>CSS pixels</a>
 <a>Picture-in-Picture window</a> associated with {{pictureInPictureElement}} if
 the |state| is `opened`. Otherwise, it MUST return 0.
 
-When the size of the <a>Picture-in-Picture window</a> associated with
-{{pictureInPictureElement}} changes, the user agent MUST <a>queue a task</a> to
-<a>fire an event</a> named {{resize}} at {{pictureInPictureElement}}.
+When the size of a <a>Picture-in-Picture window</a> |pipWindow| changes, the user agent MUST
+<a>queue a task</a> to <a>fire an event</a> named {{resize}} at |pipWindow|.
 
 ## Event types ## {#event-types}
 
