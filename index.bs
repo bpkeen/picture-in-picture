@@ -31,9 +31,6 @@ spec: Fullscreen; urlPrefix: https://fullscreen.spec.whatwg.org
     type: dfn; text: fullscreen flag; url: #fullscreen-flag
     type: dfn; text: fullscreenElement; url: dom-document-fullscreenelement
     type: dfn; text: exit fullscreen; url: fully-exit-fullscreen
-spec: MediaSession; urlPrefix: https://w3c.github.io/mediasession/
-    type: enum; text: MediaSessionEnterPictureInPictureReason; url: #enumdef-mediasessionenterpictureinpicturereason
-    type: enum-value; for: MediaSessionEnterPictureInPictureReason; text: "contentoccluded"; url: #dom-mediasessionenterpictureinpicturereason-contentoccluded
 </pre>
 
 <pre class="link-defaults">
@@ -505,13 +502,13 @@ This specification defines two <a>policy-controlled features</a>:
     <a>default allowlist</a> for this feature is `self`.
 </dl>
 
-If the [=Document=] is not [=allowed to use=] [=automatic-picture-in-picture=],
+If the [=Document=] is not [=allowed to use=] <a permission>automatic-picture-in-picture</a>,
 the user agent SHOULD NOT trigger the
 {{MediaSessionAction/"enterpictureinpicture"}} action with the
 {{MediaSessionEnterPictureInPictureReason/"contentoccluded"}} reason.
 
 Note: User agents should surface a console warning whenever
-entering Picture-in-Picture is blocked by the [=automatic-picture-in-picture=]
+entering Picture-in-Picture is blocked by the <a permission>automatic-picture-in-picture</a>
 permissions policy.
 
 # Acknowledgments # {#acknowledgments}
