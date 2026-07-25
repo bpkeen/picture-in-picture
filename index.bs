@@ -193,6 +193,15 @@ An origin is said to have an active Picture-in-Picture session if any
 of the origins in <a>initiators of active Picture-in-Picture sessions</a>
 are <a>same origin-domain</a> with origin.
 
+An <dfn export>automatic Picture-in-Picture request</dfn> is a request to enter
+Picture-in-Picture initiated by the user agent due to content occlusion. This
+includes the user agent triggering the
+{{MediaSessionAction/"enterpictureinpicture"}} action with the
+{{MediaSessionEnterPictureInPictureReason/"contentoccluded"}} reason if a
+{{MediaSessionActionHandler}} is registered for this action; otherwise, the
+user agent may execute the [=request Picture-in-Picture=] steps directly for a
+video element selected by the user agent.
+
 ## Picture-in-Picture ## {#pip}
 
 It is RECOMMENDED that video frames are not rendered in the page and in the
@@ -318,24 +327,17 @@ The {{requestPictureInPicture()}} method steps <dfn export>request Picture-in-Pi
 2. Let |doc| be [=this=]'s [=node document=].
 3. If |doc| is not [=allowed to use=] the [=policy-controlled feature=]
     named `"picture-in-picture"`, return [=a promise rejected with=] {{NotAllowedError}} {{DOMException}}.
-4. If the |doc| is not [=/allowed to use=] the [=policy-controlled feature=]
-    named `"automatic-picture-in-picture"` and the
-    {{MediaSessionEnterPictureInPictureReason}} enum, defined in
-    [[MediaSession]], is
-    {{MediaSessionEnterPictureInPictureReason/"contentoccluded"}}, return
-    [=a promise rejected with=] {{NotAllowedError}} {{DOMException}}.
-5. If [=this=]'s {{readyState}} attribute is {{HAVE_NOTHING}}, return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
-6. If [=this=] has no video track, return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
-7. If [=this=]'s {{HTMLVideoElement/disablePictureInPicture}} is true, user agent may return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
-8. If |doc|'s [=Picture-in-Picture element=] is `null`:
-    1. If [=this=]'s [=relevant global object=] does not have a [=transient activation=], then return [=a
-       promise rejected with=] {{NotAllowedError}} {{DOMException}}.
+4. If [=this=]'s {{readyState}} attribute is {{HAVE_NOTHING}}, return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
+5. If [=this=] has no video track, return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
+6. If [=this=]'s {{HTMLVideoElement/disablePictureInPicture}} is true, user agent may return [=a promise rejected with=] {{InvalidStateError}} {{DOMException}}.
+7. If |doc|'s [=Picture-in-Picture element=] is `null` and the user agent is not executing these steps directly as part of an [=automatic Picture-in-Picture request=]:
+    1. If [=this=]'s [=relevant global object=] does not have a [=transient activation=], then return [=a promise rejected with=] {{NotAllowedError}} {{DOMException}}.
     2. [=Consume user activation=] given [=this=]'s [=relevant global object=].
-9. If [=this=] is |doc|'s [=Picture-in-Picture element=]:
+8. If [=this=] is |doc|'s [=Picture-in-Picture element=]:
     1. Return [=a promise resolved with=] the [=Picture-in-Picture window=] associated with |doc|'s [=Picture-in-Picture element=].
-10. Let |global| be [=this=]'s [=relevant global object=].
-11. Let |p| be [=a new promise=] created in [=this=]'s [=relevant realm=].
-12. Return |p|, and [=enqueue the following steps=] to |doc|'s [=picture-in-picture parallel queue=]:
+9. Let |global| be [=this=]'s [=relevant global object=].
+10. Let |p| be [=a new promise=] created in [=this=]'s [=relevant realm=].
+11. Return |p|, and [=enqueue the following steps=] to |doc|'s [=picture-in-picture parallel queue=]:
     1. If [=this=] is |doc|'s [=Picture-in-Picture element=]:
         1. [=Queue a global task=] on the [=media element event task source=] given |global| to
             [=/resolve=] |p| with the [=Picture-in-Picture window=] associated with
@@ -481,6 +483,32 @@ The API is not limited to [[SECURE-CONTEXTS]] because it exposes a feature
 to web applications that user agents usually offer natively on all media
 regardless of the <a>browsing context</a>.
 
+## Permissions Integration ## {#permissions-integration}
+
+This specification defines a <a>powerful feature</a> identified by the
+[=powerful feature/name=] `"automatic-picture-in-picture"`.
+
+The `"automatic-picture-in-picture"` permission controls whether the user agent
+is allowed to initiate [=automatic Picture-in-Picture requests=].
+
+The user agent MUST NOT initiate an [=automatic Picture-in-Picture request=]
+for a {{Document}} unless the {{Document}}'s [=relevant settings object=]'s
+[=permission state=] for the `"automatic-picture-in-picture"` feature is
+{{PermissionState/"granted"}}.
+
+Note: The user agent may enforce additional eligibility criteria before
+initiating a request.
+
+The `"automatic-picture-in-picture"` <a>powerful feature</a> defines a
+[=powerful feature/permission revocation algorithm=]. To invoke the
+<dfn export>automatic Picture-in-Picture permission revocation algorithm</dfn>,
+run these steps:
+
+<ol class="algorithm">
+  <li>Let |document| be the [=current global object=]'s [=associated Document=].</li>
+  <li>If |document| has an active Picture-in-Picture session that was initiated by an [=automatic Picture-in-Picture request=], run the [=exit Picture-in-Picture algorithm=] for |document|.</li>
+</ol>
+
 ## Permissions Policy ## {#permissions-policy}
 
 This specification defines two <a>policy-controlled features</a>:
@@ -495,21 +523,17 @@ This specification defines two <a>policy-controlled features</a>:
 
   <dt>"<dfn permission export>automatic-picture-in-picture</dfn>".
   <dd>
-    Controls whether [=request Picture-in-Picture=] returns a promise
-    rejected with {{NotAllowedError}} {{DOMException}} when the
-    {{MediaSessionEnterPictureInPictureReason}} enum, defined in [[MediaSession]], is
-    {{MediaSessionEnterPictureInPictureReason/"contentoccluded"}}. The
-    <a>default allowlist</a> for this feature is `self`.
+    Controls whether the [=powerful feature=] `"automatic-picture-in-picture"`
+    is permitted in the {{Document}}. The <a>default allowlist</a> for this
+    feature is `self`.
 </dl>
 
-If the [=Document=] is not [=allowed to use=] <a permission>automatic-picture-in-picture</a>,
-the user agent SHOULD NOT trigger the
-{{MediaSessionAction/"enterpictureinpicture"}} action with the
-{{MediaSessionEnterPictureInPictureReason/"contentoccluded"}} reason.
+If the {{Document}} is not [=allowed to use=] <a permission>automatic-picture-in-picture</a>,
+the user agent MUST NOT initiate [=automatic Picture-in-Picture requests=].
 
 Note: User agents should surface a console warning whenever
-entering Picture-in-Picture is blocked by the <a permission>automatic-picture-in-picture</a>
-permissions policy.
+an [=automatic Picture-in-Picture request=] is blocked by the
+<a permission>automatic-picture-in-picture</a> permissions policy.
 
 # Acknowledgments # {#acknowledgments}
 
