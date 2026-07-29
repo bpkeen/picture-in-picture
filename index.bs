@@ -488,26 +488,13 @@ regardless of the <a>browsing context</a>.
 This specification defines a <a>powerful feature</a> identified by the
 [=powerful feature/name=] `"automatic-picture-in-picture"`.
 
-The `"automatic-picture-in-picture"` permission controls access to the
-`"automatic-picture-in-picture"` powerful feature.
+When initiating an [=automatic Picture-in-Picture request=], the user agent
+MUST [=request permission to use=] `"automatic-picture-in-picture"`.
 
-The user agent MUST NOT initiate an [=automatic Picture-in-Picture request=]
-for a {{Document}} if the {{Document}}'s [=relevant settings object=]'s
-[=permission state=] for the `"automatic-picture-in-picture"` feature is
-{{PermissionState/"denied"}}.
+If the result of the permission request is {{PermissionState/"denied"}}, the
+user agent MUST run the [=automatic Picture-in-Picture permission revocation algorithm=].
 
-If the [=permission state=] is {{PermissionState/"prompt"}}:
-1. The user agent MUST prompt the user for permission upon initiating the [=automatic Picture-in-Picture request=].
-2. If the user denies the permission, the user agent MUST run the [=automatic Picture-in-Picture permission revocation algorithm=].
-
-Note: When the [=permission state=] is {{PermissionState/"prompt"}}, user
-agents should display the prompt within the Picture-in-Picture window, blocking
-all other interaction until the user responds.
-
-If the [=permission state=] is {{PermissionState/"granted"}}, the user agent
-may initiate the [=automatic Picture-in-Picture request=] without prompting.
-
-Note: The user agent may enforce additional eligibility criteria before
+The user agent MAY enforce additional eligibility criteria before
 initiating an [=automatic Picture-in-Picture request=].
 
 The `"automatic-picture-in-picture"` <a>powerful feature</a> defines a
@@ -542,7 +529,7 @@ This specification defines two <a>policy-controlled features</a>:
 If the {{Document}} is not [=allowed to use=] <a permission>automatic-picture-in-picture</a>,
 the user agent MUST NOT initiate [=automatic Picture-in-Picture requests=].
 
-Note: User agents should surface a console warning whenever
+Note: User agents are encouraged to surface a web a console warning whenever
 an [=automatic Picture-in-Picture request=] is blocked by the
 <a permission>automatic-picture-in-picture</a> permissions policy.
 
